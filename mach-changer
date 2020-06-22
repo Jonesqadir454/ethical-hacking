@@ -1,0 +1,47 @@
+import subprocess
+import argparse
+import re
+
+def argparserer():
+    parser=argparse.ArgumentParser()
+    parser.add_argument("-i", "--interface", dest="interface", help="write interface to Change mac")
+    parser.add_argument("-m", "--Mac_adress", dest="Mac_adress", help="Mac adress to change")
+    option=parser.parse_args()
+    if not option.interface:
+        print("[-] there is no interface like you wrote")
+    if not option.Mac_adress:
+        parser.error("[-]please check your Mac-adress")
+    return option
+
+def process_change(interface, Mac_adress):
+    print("[-]change mac_adress to "+ Mac_adress)
+    subprocess.call(["ifconfig", interface, "down"])
+    subprocess.call(["ifconfig", interface, "hw", "ether", Mac_adress])
+    subprocess.call(["ifconfig", interface, "up"])
+
+def check_putout(interface):
+    s=subprocess.check_output(["ifconfig", interface])
+    m=re.search(r"\w\w:\w\w:\w\w:\w\w:\w\w", s)
+    if m:
+        return m.group(0)
+    else:
+        print("[-] there is no mac-adress" )
+
+
+
+option=argparserer()
+current_mac=check_putout(option.interface)
+
+process_change(option.interface, option.Mac_adress)
+
+print("current mac= "+str(current_mac))
+if current_mac==option.interface:
+    print("[-]your mac-adress got changed")
+else:
+    "[-] your mac-adress didnt change"
+
+
+
+
+
+
